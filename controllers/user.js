@@ -1,6 +1,7 @@
 //import model
 const models = require('../models')
 const User = models.user
+const jwt = require('jsonwebtoken')
 
 
 //CRUD func
@@ -15,27 +16,48 @@ exports.show = (req, res) => {
 }
 
 exports.store = (req, res) => {
-    User.create(req.body).then(data => {
+    const {email, password, name, gender, phoneNumber, job} =req.body
+    User.create({
+        email: email,
+        password: password,
+        name: name,
+        gender: gender,
+        phoneNumber: phoneNumber,
+        job: job
+    }).then(data => {
         res.send(data)
     })
 }
 
 exports.patch = (req, res) => {
-    User.update(
-        req.body, {
-            where: {id: req.params.id}
+    jwt.verify(token, 'my-secret-key', (err, authdata)=>{
+        if(err){
+            res.status(403).send('Token invalid')
+        }else{
+            User.update(
+                req.body, {
+                    where: {id: req.params.id}
+                }
+            ).then(data => {
+                res.send({
+                    message: "Success"
+                })
+            })
         }
-    ).then(data => {
-        res.send({
-            message: "Success"
-        })
     })
+    
 }
 
 exports.delete = (req, res) => {
-    User.destroy({ where: {id: req.params.id}}).then(data => {
-        res.send({
-            message: "Success"
-        })
+    jwt.verify(token, 'my-secret-key', (err, authdata)=>{
+        if(err){
+            res.status(403).send('Token invalid')
+        }else{
+            User.destroy({ where: {id: req.params.id}}).then(data => {
+                res.send({
+                    message: "Success"
+                })
+            })
+        }
     })
 }

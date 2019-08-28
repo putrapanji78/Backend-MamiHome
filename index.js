@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+require('express-group-routes')
 
 const app = express()
 const port = process.env.PORT || 4000
@@ -15,27 +16,42 @@ const AuthController = require('./controllers/auth')
 //middlewares
 const { authenticated } = require('./middleware/middleware')
 
-app.get('/',(req,res)=>{
-    res.send('Hello World')
+//Upload Foto
+const path = require('path')
+var multer  = require('multer');
+var storage = multer.diskStorage({
+  destination : 'images/',
+    filename: function (req, file, cb){
+      cb(null, file.fieldname + '-' + Date.now() + '.' + path.extname(file.originalname));
+    }
+});
+var upload = multer({storage: storage});
+
+app.post('/',(req,res)=>{
+    res.send({
+      a : req.body.a
+    })
+})
+app.group('/api/v1', (router)=>{
+router.post('/login', AuthController.login)
+router.get('/users',  UserController.index) 
+router.get('/user/:id',  UserController.show) 
+router.post('/register', UserController.store)
+router.patch('/user/:id',  authenticated,UserController.patch) //auth
+router.delete('/user/:id',  authenticated,UserController.delete) //auth
+
+router.get('/rents',  RentController.index) 
+router.get('/rent/:id',  RentController.show) 
+router.post('/addrent', authenticated, upload.single('Image1') ,RentController.store)//auth
+router.patch('/rent/:id',  authenticated,RentController.patch) //auth
+router.delete('/rent/:id',  authenticated,RentController.delete) //auth
+
+router.get('/booking',  BookingController.index) 
+router.get('/booking/:id',  BookingController.show) 
+router.post('/addbooking', authenticated,BookingController.store) //auth
+router.patch('/booking/:id',  authenticated,BookingController.patch) //auth
+router.delete('/booking/:id',  authenticated,BookingController.delete) //auth
 })
 
-app.post('/login', AuthController.login)
-app.get('/users',  UserController.index) //auth
-app.get('/user/:id',  UserController.show) //auth
-app.post('/register', UserController.store)
-app.patch('/user/:id',  authenticated,UserController.patch) //auth
-app.delete('/user/:id',  authenticated,UserController.delete) //auth
-
-app.get('/rents',  RentController.index) //auth
-app.get('/rent/:id',  RentController.show) //auth
-app.post('/addrent', authenticated, RentController.store)
-app.patch('/rent/:id',  authenticated,RentController.patch) //auth
-app.delete('/rent/:id',  authenticated,RentController.delete) //auth
-
-app.get('/booking',  BookingController.index) //auth
-app.get('/booking/:id',  BookingController.show) //auth
-app.post('/addbooking', authenticated,BookingController.store)
-app.patch('/booking/:id',  authenticated,BookingController.patch) //auth
-app.delete('/booking/:id',  authenticated,BookingController.delete) //auth
 
 app.listen(port, () => console.log(`Listening on port ${port}!`))

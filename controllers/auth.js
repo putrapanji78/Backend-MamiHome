@@ -11,6 +11,7 @@ exports.login = (req, res)=>{
     User.findOne({where: {email, password}}).then(user=>{
         if(user){
             const token = jwt.sign({ userId: user.id }, 'my-secret-key')
+            res.header('Authorization', 'Bearer'+token)
             res.send({
                 user,
                 token
