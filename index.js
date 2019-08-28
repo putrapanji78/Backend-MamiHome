@@ -1,6 +1,8 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 require('express-group-routes')
+const fileType = require('file-type')
+const fs = require('fs')
 
 const app = express()
 const port = process.env.PORT || 4000
@@ -39,6 +41,17 @@ router.get('/user/:id',  UserController.show)
 router.post('/register', UserController.store)
 router.patch('/user/:id',  authenticated,UserController.patch) //auth
 router.delete('/user/:id',  authenticated,UserController.delete) //auth
+router.get('/images/:imagename', (req, res) => {
+
+  let imagename = req.params.imagename
+  let imagepath = __dirname + "/images/" + imagename
+  let image = fs.readFileSync(imagepath)
+  let mime = fileType(image).mime
+
+res.writeHead(200, {'Content-Type': mime })
+res.end(image, 'binary')
+})
+
 
 router.get('/rents',  RentController.index) 
 router.get('/rent/:id',  RentController.show) 
